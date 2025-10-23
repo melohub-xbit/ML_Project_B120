@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import shutil
+import os
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from catboost import CatBoostRegressor, Pool
@@ -10,60 +12,67 @@ warnings.filterwarnings('ignore')
 np.random.seed(42)
 
 # ============================================================================
-# DATA PREPROCESSING
+# DATA LOADING
 # ============================================================================
 
-def preprocess_data(train_df, test_df):
-    """Preprocess training and test data"""
-    print("Preprocessing data...")
+def load_preprocessed_data():
+    """Load preprocessed data and create local copies"""
+    print("Loading preprocessed data...")
     
-    # Separate target and features
-    X_train = train_df.drop(['Transport_Cost'], axis=1)
-    y_train = train_df['Transport_Cost'].values
-    X_test = test_df.copy()
+    # Create dataset directory
+    os.makedirs('dataset_preprocessed', exist_ok=True)
     
-    # Store customer IDs
-    train_ids = X_train['Hospital_Id'].copy()
-    test_ids = X_test['Hospital_Id'].copy()
+    # Copy preprocessed files to local folder
+    src_train = '../processed_data/train_processed.csv'
+    src_test = '../processed_data/test_processed.csv'
+    dst_train = 'dataset_preprocessed/train_processed.csv'
+    dst_test = 'dataset_preprocessed/test_processed.csv'
     
-    # Drop ID column
-    X_train = X_train.drop(['Hospital_Id'], axis=1)
-    X_test = X_test.drop(['Hospital_Id'], axis=1)
+    shutil.copy(src_train, dst_train)
+    shutil.copy(src_test, dst_test)
+    print(f"Copied preprocessed data to dataset_preprocessed/")
     
-    # Handle dates
-    for df in [X_train, X_test]:
-        df['Order_Placed_Date'] = pd.to_datetime(df['Order_Placed_Date'], format='%m/%d/%y', errors='coerce')
-        df['Delivery_Date'] = pd.to_datetime(df['Delivery_Date'], format='%m/%d/%y', errors='coerce')
-        
-        df['Order_Year'] = df['Order_Placed_Date'].dt.year
-        df['Order_Month'] = df['Order_Placed_Date'].dt.month
-        df['Order_Day'] = df['Order_Placed_Date'].dt.day
-        df['Delivery_Year'] = df['Delivery_Date'].dt.year
-        df['Delivery_Month'] = df['Delivery_Date'].dt.month
-        df['Delivery_Day'] = df['Delivery_Date'].dt.day
-        df['Delivery_Time'] = (df['Delivery_Date'] - df['Order_Placed_Date']).dt.days
-        
-        df.drop(['Order_Placed_Date', 'Delivery_Date'], axis=1, inplace=True)
+    # Load data
+    train_df = pd.read_csv(dst_train)
+    test_df = pd.read_csv(dst_test)
     
-    # Identify categorical columns
-    categorical_cols = X_train.select_dtypes(include=['object']).columns.tolist()
-    numerical_cols = X_train.select_dtypes(include=[np.number]).columns.tolist()
+    print(f"Train shape: {train_df.shape}")
+    print(f"Test shape: {test_df.shape}")
     
-    # Fill missing values for numerical columns
-    for col in numerical_cols:
-        X_train[col].fillna(X_train[col].median(), inplace=True)
-        X_test[col].fillna(X_train[col].median(), inplace=True)
+    # Extract features and targets
+    # Train data has: features + Transport_Cost + Transport_Cost_Log + Target_Shift_Value
+    y_train = train_df['Transport_Cost_Log'].values
+    shift_value = train_df['Target_Shift_Value'].iloc[0]
     
-    # Fill missing values for categorical columns
-    for col in categorical_cols:
-        X_train[col].fillna('Unknown', inplace=True)
-        X_test[col].fillna('Unknown', inplace=True)
+    # Drop target columns from features
+    X_train = train_df.drop(['Transport_Cost', 'Transport_Cost_Log', 'Target_Shift_Value'], axis=1)
     
-    print(f"Training samples: {X_train.shape[0]}, Features: {X_train.shape[1]}")
-    print(f"Test samples: {X_test.shape[0]}")
+    # Test data has: Hospital_Id + features
+    test_ids = test_df['Hospital_Id'].copy()
+    X_test = test_df.drop(['Hospital_Id'], axis=1)
+    
+    # Define categorical columns (these are now label-encoded but still categorical)
+    categorical_cols = [
+        'Equipment_Type', 
+        'Transport_Method', 
+        'Hospital_Info', 
+        'CrossBorder_Shipping',
+        'Urgent_Shipping',
+        'Installation_Service',
+        'Fragile_Equipment',
+        'Rural_Hospital', 
+        'Location_State', 
+        'Location_Zip'
+    ]
+    
+    # Verify categorical columns exist
+    categorical_cols = [col for col in categorical_cols if col in X_train.columns]
+    
+    print(f"\nFeatures: {X_train.shape[1]}")
     print(f"Categorical features: {len(categorical_cols)}")
+    print(f"Target shift value: {shift_value}")
     
-    return X_train, y_train, X_test, test_ids, categorical_cols
+    return X_train, y_train, X_test, test_ids, categorical_cols, shift_value
 
 
 # ============================================================================
@@ -187,24 +196,15 @@ def calculate_metrics(y_true, y_pred):
 
 def main():
     print("=" * 80)
-    print("CATBOOST REGRESSION")
+    print("CATBOOST REGRESSION WITH PREPROCESSED DATA")
     print("=" * 80)
     
     # Create plots directory
     import os
     os.makedirs('plots', exist_ok=True)
     
-    # Load data
-    print("\nLoading data...")
-    train_df = pd.read_csv('dataset/train.csv')
-    test_df = pd.read_csv('dataset/test.csv')
-    sample_submission = pd.read_csv('dataset/sample_submission.csv')
-    
-    print(f"Train shape: {train_df.shape}")
-    print(f"Test shape: {test_df.shape}")
-    
-    # Preprocess data
-    X_train_full, y_train_full, X_test, test_ids, categorical_cols = preprocess_data(train_df, test_df)
+    # Load preprocessed data
+    X_train_full, y_train_full, X_test, test_ids, categorical_cols, shift_value = load_preprocessed_data()
     
     # Split into train and validation
     X_train, X_val, y_train, y_val = train_test_split(
@@ -214,7 +214,7 @@ def main():
     print(f"\nTrain set: {X_train.shape[0]} samples")
     print(f"Validation set: {X_val.shape[0]} samples")
     
-    # Create CatBoost pools
+    # Create CatBoost pools with categorical features
     train_pool = Pool(X_train, y_train, cat_features=categorical_cols)
     val_pool = Pool(X_val, y_val, cat_features=categorical_cols)
     
@@ -250,7 +250,7 @@ def main():
     
     # Evaluate on validation set
     print("\n" + "=" * 80)
-    print("VALIDATION METRICS")
+    print("VALIDATION METRICS (LOG SCALE)")
     print("=" * 80)
     
     y_val_pred = model.predict(X_val)
@@ -285,7 +285,11 @@ def main():
     print("GENERATING PREDICTIONS")
     print("=" * 80)
     
-    test_predictions = final_model.predict(X_test)
+    # Predictions are in log scale, need to reverse transform
+    test_predictions_log = final_model.predict(X_test)
+    test_predictions = np.expm1(test_predictions_log) - shift_value
+    
+    print(f"Shift value used for inverse transform: {shift_value}")
     
     # Create submission file
     submission = pd.DataFrame({
