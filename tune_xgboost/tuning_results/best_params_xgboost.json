@@ -1,0 +1,16 @@
+{
+    "timestamp": "2025-10-23 23:07:19",
+    "model": "XGBoost",
+    "best_cv_rmse": 0.1555628603736627,
+    "n_trials": 50,
+    "best_params": {
+        "learning_rate": 0.13800601700401058,
+        "max_depth": 10,
+        "subsample": 0.7029066072983194,
+        "colsample_bytree": 0.807602016403571,
+        "min_child_weight": 7,
+        "reg_alpha": 0.18808009264059872,
+        "reg_lambda": 0.2610364304178423,
+        "smoothing": 1.1344656338111112
+    }
+}

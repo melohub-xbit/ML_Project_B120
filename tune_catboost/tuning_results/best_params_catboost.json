@@ -1,0 +1,13 @@
+{
+    "timestamp": "2025-10-24 00:44:45",
+    "model": "CatBoost",
+    "best_cv_rmse": 0.15058578080152668,
+    "n_trials": 50,
+    "best_params": {
+        "learning_rate": 0.19211370639487607,
+        "depth": 6,
+        "l2_leaf_reg": 1.2199114172475822,
+        "bagging_temperature": 0.28493162993250676,
+        "random_strength": 0.6406953359782641
+    }
+}
