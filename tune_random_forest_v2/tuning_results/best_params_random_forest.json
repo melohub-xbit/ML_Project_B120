@@ -1,0 +1,14 @@
+{
+    "timestamp": "2025-10-24 09:11:25",
+    "model": "Random Forest",
+    "best_cv_rmse": 0.16727660400849326,
+    "n_trials": 30,
+    "best_params": {
+        "n_estimators": 485,
+        "max_depth": 18,
+        "min_samples_split": 18,
+        "min_samples_leaf": 9,
+        "max_features": 0.698531189666078,
+        "smoothing": 1.0128299345455185
+    }
+}

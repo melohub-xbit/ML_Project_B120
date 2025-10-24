@@ -1,0 +1,12 @@
+OPTIMAL ENSEMBLE WEIGHTS
+==================================================
+
+Best Regularization (alpha): 1.0
+Validation RMSE: 0.043390
+
+Weights:
+  W_CB  = 0.195347  (19.53%)
+  W_XGB = 0.264578  (26.46%)
+  W_RF  = 0.540075  (54.01%)
+
+Sum: 1.000000
