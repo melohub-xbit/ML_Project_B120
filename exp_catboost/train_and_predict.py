@@ -14,23 +14,18 @@ np.random.seed(42)
 # ============================================================================
 
 def preprocess_data(train_df, test_df):
-    """Preprocess training and test data"""
     print("Preprocessing data...")
     
-    # Separate target and features
     X_train = train_df.drop(['Transport_Cost'], axis=1)
     y_train = train_df['Transport_Cost'].values
     X_test = test_df.copy()
     
-    # Store customer IDs
     train_ids = X_train['Hospital_Id'].copy()
     test_ids = X_test['Hospital_Id'].copy()
     
-    # Drop ID column
     X_train = X_train.drop(['Hospital_Id'], axis=1)
     X_test = X_test.drop(['Hospital_Id'], axis=1)
     
-    # Handle dates
     for df in [X_train, X_test]:
         df['Order_Placed_Date'] = pd.to_datetime(df['Order_Placed_Date'], format='%m/%d/%y', errors='coerce')
         df['Delivery_Date'] = pd.to_datetime(df['Delivery_Date'], format='%m/%d/%y', errors='coerce')
@@ -45,16 +40,13 @@ def preprocess_data(train_df, test_df):
         
         df.drop(['Order_Placed_Date', 'Delivery_Date'], axis=1, inplace=True)
     
-    # Identify categorical columns
     categorical_cols = X_train.select_dtypes(include=['object']).columns.tolist()
     numerical_cols = X_train.select_dtypes(include=[np.number]).columns.tolist()
     
-    # Fill missing values for numerical columns
     for col in numerical_cols:
         X_train[col].fillna(X_train[col].median(), inplace=True)
         X_test[col].fillna(X_train[col].median(), inplace=True)
     
-    # Fill missing values for categorical columns
     for col in categorical_cols:
         X_train[col].fillna('Unknown', inplace=True)
         X_test[col].fillna('Unknown', inplace=True)
@@ -71,13 +63,11 @@ def preprocess_data(train_df, test_df):
 # ============================================================================
 
 def plot_training_history(model, save_path='plots/training_history.png'):
-    """Plot training and validation losses"""
     train_rmse = model.evals_result_['learn']['RMSE']
     val_rmse = model.evals_result_['validation']['RMSE']
     
     plt.figure(figsize=(12, 5))
     
-    # RMSE Loss
     plt.subplot(1, 2, 1)
     plt.plot(train_rmse, label='Train RMSE', linewidth=2)
     plt.plot(val_rmse, label='Validation RMSE', linewidth=2)
@@ -87,7 +77,6 @@ def plot_training_history(model, save_path='plots/training_history.png'):
     plt.legend()
     plt.grid(True, alpha=0.3)
     
-    # Learning curve
     plt.subplot(1, 2, 2)
     plt.plot(train_rmse, label='Train RMSE', linewidth=2)
     plt.plot(val_rmse, label='Validation RMSE', linewidth=2)
@@ -105,14 +94,11 @@ def plot_training_history(model, save_path='plots/training_history.png'):
 
 
 def plot_feature_importance(model, save_path='plots/feature_importance.png'):
-    """Plot feature importance"""
     feature_importance = model.get_feature_importance()
     feature_names = model.feature_names_
     
-    # Sort by importance
     indices = np.argsort(feature_importance)[::-1]
     
-    # Plot top 20 features
     top_n = min(20, len(feature_importance))
     top_indices = indices[:top_n]
     
@@ -129,10 +115,8 @@ def plot_feature_importance(model, save_path='plots/feature_importance.png'):
 
 
 def plot_metrics(y_true, y_pred, split_name='Validation', save_path='plots/metrics.png'):
-    """Plot prediction metrics"""
     plt.figure(figsize=(15, 5))
     
-    # Predictions vs Actual
     plt.subplot(1, 3, 1)
     plt.scatter(y_true, y_pred, alpha=0.5, s=20)
     plt.plot([y_true.min(), y_true.max()], [y_true.min(), y_true.max()], 'r--', lw=2)
@@ -141,7 +125,6 @@ def plot_metrics(y_true, y_pred, split_name='Validation', save_path='plots/metri
     plt.title(f'{split_name} Set: Predictions vs Actual')
     plt.grid(True, alpha=0.3)
     
-    # Residuals
     plt.subplot(1, 3, 2)
     residuals = y_true - y_pred
     plt.scatter(y_pred, residuals, alpha=0.5, s=20)
@@ -151,7 +134,6 @@ def plot_metrics(y_true, y_pred, split_name='Validation', save_path='plots/metri
     plt.title(f'{split_name} Set: Residual Plot')
     plt.grid(True, alpha=0.3)
     
-    # Distribution of residuals
     plt.subplot(1, 3, 3)
     plt.hist(residuals, bins=50, edgecolor='black', alpha=0.7)
     plt.xlabel('Residuals')
@@ -167,7 +149,6 @@ def plot_metrics(y_true, y_pred, split_name='Validation', save_path='plots/metri
 
 
 def calculate_metrics(y_true, y_pred):
-    """Calculate regression metrics"""
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
     mae = mean_absolute_error(y_true, y_pred)
     r2 = r2_score(y_true, y_pred)
@@ -190,11 +171,9 @@ def main():
     print("CATBOOST REGRESSION")
     print("=" * 80)
     
-    # Create plots directory
     import os
     os.makedirs('plots', exist_ok=True)
     
-    # Load data
     print("\nLoading data...")
     train_df = pd.read_csv('dataset/train.csv')
     test_df = pd.read_csv('dataset/test.csv')
@@ -203,10 +182,8 @@ def main():
     print(f"Train shape: {train_df.shape}")
     print(f"Test shape: {test_df.shape}")
     
-    # Preprocess data
     X_train_full, y_train_full, X_test, test_ids, categorical_cols = preprocess_data(train_df, test_df)
     
-    # Split into train and validation
     X_train, X_val, y_train, y_val = train_test_split(
         X_train_full, y_train_full, test_size=0.2, random_state=42
     )
@@ -214,11 +191,9 @@ def main():
     print(f"\nTrain set: {X_train.shape[0]} samples")
     print(f"Validation set: {X_val.shape[0]} samples")
     
-    # Create CatBoost pools
     train_pool = Pool(X_train, y_train, cat_features=categorical_cols)
     val_pool = Pool(X_val, y_val, cat_features=categorical_cols)
     
-    # Train model
     print("\n" + "=" * 80)
     print("TRAINING CATBOOST MODEL")
     print("=" * 80)
@@ -242,13 +217,10 @@ def main():
         plot=False
     )
     
-    # Plot training history
     plot_training_history(model, 'plots/training_history.png')
     
-    # Plot feature importance
     plot_feature_importance(model, 'plots/feature_importance.png')
     
-    # Evaluate on validation set
     print("\n" + "=" * 80)
     print("VALIDATION METRICS")
     print("=" * 80)
@@ -259,10 +231,8 @@ def main():
     for metric, value in val_metrics.items():
         print(f"{metric}: {value:.4f}")
     
-    # Plot validation metrics
     plot_metrics(y_val, y_val_pred, 'Validation', 'plots/validation_metrics.png')
     
-    # Train on full dataset
     print("\n" + "=" * 80)
     print("TRAINING ON FULL DATASET")
     print("=" * 80)
@@ -280,14 +250,12 @@ def main():
     
     final_model.fit(train_pool_full)
     
-    # Predict on test set
     print("\n" + "=" * 80)
     print("GENERATING PREDICTIONS")
     print("=" * 80)
     
     test_predictions = final_model.predict(X_test)
     
-    # Create submission file
     submission = pd.DataFrame({
         'Hospital_Id': test_ids,
         'Transport_Cost': test_predictions

@@ -17,7 +17,6 @@ print("=" * 80)
 
 train_df = pd.read_csv('dataset/train.csv')
 
-# Create output directory
 import os
 os.makedirs('feature_plots', exist_ok=True)
 
@@ -27,22 +26,17 @@ os.makedirs('feature_plots', exist_ok=True)
 
 print("\nCreating Correlation with Target Plot...")
 
-# Get all numerical columns
 numerical_cols = train_df.select_dtypes(include=[np.number]).columns.tolist()
 
-# Remove ID and target from features
 numerical_cols = [col for col in numerical_cols if col not in ['Hospital_Id', 'Transport_Cost']]
 
-# Calculate correlations
 correlations = {}
 for col in numerical_cols:
-    # Remove NaN for correlation calculation
     valid_data = train_df[[col, 'Transport_Cost']].dropna()
     if len(valid_data) > 0:
         corr = valid_data[col].corr(valid_data['Transport_Cost'])
         correlations[col] = corr
 
-# Create DataFrame and sort
 corr_df = pd.DataFrame(list(correlations.items()), columns=['Feature', 'Correlation'])
 corr_df['Abs_Correlation'] = corr_df['Correlation'].abs()
 corr_df = corr_df.sort_values('Correlation', ascending=True)
@@ -51,10 +45,8 @@ print("\nCorrelations with Transport_Cost:")
 for _, row in corr_df.iterrows():
     print(f"  {row['Feature']}: {row['Correlation']:.4f}")
 
-# Create horizontal bar chart
 fig, ax = plt.subplots(figsize=(12, 8))
 
-# Color bars based on correlation strength
 colors = []
 for corr in corr_df['Correlation']:
     if abs(corr) > 0.3:
@@ -66,16 +58,13 @@ for corr in corr_df['Correlation']:
 
 bars = ax.barh(corr_df['Feature'], corr_df['Correlation'], color=colors, edgecolor='black', alpha=0.8)
 
-# Add vertical line at 0
 ax.axvline(0, color='black', linestyle='-', linewidth=1)
 
-# Add reference lines for correlation thresholds
 ax.axvline(0.3, color='green', linestyle='--', linewidth=1, alpha=0.5, label='Strong (>0.3)')
 ax.axvline(-0.3, color='green', linestyle='--', linewidth=1, alpha=0.5)
 ax.axvline(0.15, color='orange', linestyle='--', linewidth=1, alpha=0.5, label='Moderate (>0.15)')
 ax.axvline(-0.15, color='orange', linestyle='--', linewidth=1, alpha=0.5)
 
-# Add value labels on bars
 for i, (feature, corr) in enumerate(zip(corr_df['Feature'], corr_df['Correlation'])):
     ax.text(corr + (0.02 if corr > 0 else -0.02), i, f'{corr:.3f}', 
            va='center', ha='left' if corr > 0 else 'right', fontsize=9, fontweight='bold')
