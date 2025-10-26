@@ -1,9 +1,0 @@
-original_train_shape: (5000, 20)
-original_test_shape: (500, 20)
-processed_train_shape: (5000, 35)
-processed_test_shape: (500, 33)
-categorical_columns: ['Equipment_Type', 'CrossBorder_Shipping', 'Urgent_Shipping', 'Installation_Service', 'Transport_Method', 'Fragile_Equipment', 'Hospital_Info', 'Rural_Hospital', 'Location_State', 'Location_Zip']
-numerical_columns: ['Supplier_Reliability', 'Equipment_Height', 'Equipment_Width', 'Equipment_Weight', 'Equipment_Value', 'Base_Transport_Fee', 'Order_Year', 'Order_Month', 'Order_Day', 'Order_DayOfWeek', 'Order_Quarter', 'Delivery_Year', 'Delivery_Month', 'Delivery_Day', 'Delivery_DayOfWeek', 'Delivery_Quarter', 'Delivery_Time', 'Location_Is_Military', 'Equipment_Area', 'Weight_per_Area', 'Value_per_Weight', 'Value_per_Area']
-target_shift_value: 588184.2
-features_engineered: ['Location_State', 'Location_Zip', 'Location_Is_Military', 'Equipment_Area', 'Weight_per_Area', 'Value_per_Weight', 'Value_per_Area', 'Order_Year', 'Order_Month', 'Order_Day', 'Order_DayOfWeek', 'Order_Quarter', 'Delivery_Year', 'Delivery_Month', 'Delivery_Day', 'Delivery_DayOfWeek', 'Delivery_Quarter', 'Delivery_Time']
-columns_dropped: ['Hospital_Id', 'Hospital_Location', 'Supplier_Name']

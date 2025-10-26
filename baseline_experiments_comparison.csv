@@ -1,0 +1,15 @@
+Aspect,Linear Regression,Ridge Regression,Bayesian Ridge,Decision Trees,K-Nearest Neighbors (KNN)
+Model Type,Linear parametric,Linear parametric with L2 regularization,Probabilistic linear,Non-parametric tree-based,Instance-based learning
+Implementation,Scikit-learn library,Custom gradient descent,Scikit-learn library,Scikit-learn library,Scikit-learn library
+Preprocessing,Basic feature engineering,Basic feature engineering,Advanced preprocessing pipeline,Basic feature engineering,Advanced preprocessing pipeline
+Target Transform,Log transformation,Log transformation,Log transformation,Original scale,Log transformation
+Categorical Encoding,One-hot encoding,Label encoding,Label encoding + One-hot,One-hot encoding,Label encoding + One-hot
+Feature Scaling,StandardScaler,StandardScaler,StandardScaler,Not required,StandardScaler
+Dimensionality Reduction,None,None,None,None,PCA (95% variance)
+Key Hyperparameters,Default,"α=10.0; lr=0.01; iterations=1000","α₁=α₂=λ₁=λ₂=1e-6; max_iter=500","max_depth=10; min_samples_leaf=20","n_neighbors=10; weights='distance'"
+Regularization,None,L2 penalty,Bayesian priors,Pruning via min_samples,Distance weighting
+Training Method,Closed-form solution,Iterative gradient descent,Variational inference,Greedy recursive splitting,Memory-based lazy learning
+Validation Split,80-20 split,80-20 split,80-20 split,5-fold cross-validation,80-20 split
+Feature Selection,All features,All features,All features,All features,PCA components
+Advantages,"Simple; interpretable; fast",Handles multicollinearity,Uncertainty quantification,Captures non-linearity,No training assumptions
+Limitations,Assumes linearity,Manual hyperparameter tuning,Sensitive to scaling,Prone to overfitting,Computationally expensive at prediction

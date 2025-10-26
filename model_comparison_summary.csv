@@ -1,0 +1,15 @@
+Comparison Aspect,Baseline Models,Advanced Models (CatBoost; XGBoost; RF),Why Advanced is Better
+Model Architecture,Single learner (linear or simple tree/KNN),Ensemble of 500+ trees,Ensemble voting/averaging provides more robust predictions
+Non-linear Relationships,Cannot capture (linear) or limited (single tree),Naturally capture complex non-linear interactions,Dataset has weak linear correlations (max 0.43) indicating non-linearity
+Feature Interactions,Requires manual interaction terms,Automatically discovers optimal feature combinations,Saves engineering effort and finds hidden patterns
+Categorical Handling,"One-hot encoding (creates 100+ dimensions, sparse data)","CatBoost: Native support; XGBoost/RF: Target encoding",Efficient handling without dimension explosion
+Regularization,Basic L2 penalty or simple pruning,"Multiple techniques: L2 leaf reg; max depth; subsampling; early stopping",Better overfitting control and generalization
+Outlier Robustness,Sensitive to outliers (especially linear and KNN),Tree splits robust to outliers; boosting down-weights them,Dataset has 493 negative values and extreme outliers
+Missing Value Handling,Requires separate imputation step,Native missing value handling (learns optimal direction),Dataset has up to 21% missing in some features
+Feature Importance,Limited or unreliable (single model),Averaged across hundreds of trees (reliable),Better feature selection and interpretability
+Bias-Variance Tradeoff,"High bias (linear) or high variance (tree, KNN)","Boosting: Reduces bias; Bagging (RF): Reduces variance",Achieves optimal balance through ensemble
+Training Approach,Single model fit,Sequential error correction (boosting) or parallel (bagging),Adaptive learning focuses on hard samples
+Skewed Feature Handling,Sensitive to highly skewed distributions,"Tree splits handle skewness naturally, robust to scale",Dataset has features with skewness >20
+Categorical Cardinality,Struggles with high-cardinality features,Efficient encoding preserves information without explosion,12 categorical features in dataset
+Hyperparameter Tuning,Limited parameters; minimal gains,"Extensive tuning space: learning rate; depth; estimators; regularization",Significant performance improvements possible
+Scalability,Fast (linear) or slow prediction (KNN),Parallel computation; GPU acceleration available,Efficient for production deployment
